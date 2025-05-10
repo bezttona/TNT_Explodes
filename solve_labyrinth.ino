@@ -1,7 +1,9 @@
-#define R1 A0
-#define R2 A1
-#define L1 A2
-#define L2 A3
+#define L1 A0
+#define L2 A1
+#define R1 A2
+#define R2 A3
+
+int a[3]={0,0,0};
 
 //Cam bien 1 (dang truoc)
 const int trig1 = 11;
@@ -20,10 +22,10 @@ void setup() {
   //Dang truoc
   pinMode(trig1,OUTPUT);
   pinMode(echo1,INPUT);
-  //Ben trai
+  //Ben phai
   pinMode(trig2,OUTPUT);
   pinMode(echo2,INPUT);
-  //Ben phai
+  //Ben trai
   pinMode(trig3,OUTPUT);
   pinMode(echo3,INPUT);
   //Banh trai
@@ -51,8 +53,8 @@ int ahead() {
   return distance;
 }
 
-//Cach ben trai
-int left() {
+//Cach ben phai
+int right() {
   unsigned long duration; 
   int distance;           
     
@@ -68,16 +70,8 @@ int left() {
   return distance;
 }
 
-//Dung dong co
-void stop() {
-  digitalWrite(L1, LOW);
-  digitalWrite(L2, LOW);
-  digitalWrite(R1, LOW);
-  digitalWrite(R2, LOW);
-}
-
-//Cach ben phai
-int right() {
+//Cach ben trai
+int left() {
   unsigned long duration; 
   int distance;           
     
@@ -93,22 +87,12 @@ int right() {
   return distance;
 }
 
-//Re trai
-void turnLeft() {
-  digitalWrite(L1, LOW);   
-  digitalWrite(L2, HIGH);
-
-  digitalWrite(R1, HIGH);
-  digitalWrite(R2, LOW);
-}
-
-//Re phai
-void turnRight() {
-  digitalWrite(L1, HIGH);   
+//Dung dong co
+void stop() {
+  digitalWrite(L1, LOW);
   digitalWrite(L2, LOW);
-
   digitalWrite(R1, LOW);
-  digitalWrite(R2, HIGH);
+  digitalWrite(R2, LOW);
 }
 
 //Di thang
@@ -118,6 +102,53 @@ void goAhead() {
 
   digitalWrite(R1, HIGH);
   digitalWrite(R2, LOW);
+
+  delay(70);
+  stop();
+  delay(500);
+}
+
+//Di thang vao nga re
+void go() {
+  digitalWrite(L1, HIGH);   
+  digitalWrite(L2, LOW);
+
+  digitalWrite(R1, HIGH);
+  digitalWrite(R2, LOW);
+
+  delay(250);
+  stop();
+  delay(500);
+}
+
+//Re trai
+void turnLeft() {
+  digitalWrite(R1, HIGH);
+  digitalWrite(R2, LOW);
+
+  digitalWrite(L1, LOW);   
+  digitalWrite(L2, LOW);
+
+  delay(1000);
+  stop();
+  delay(500);
+
+  go();
+}
+
+//Re phai
+void turnRight() {
+  digitalWrite(L1, HIGH);   
+  digitalWrite(L2, LOW);
+
+  digitalWrite(R1, LOW);
+  digitalWrite(R2, LOW);
+
+  delay(1000);
+  stop();
+  delay(500);
+
+  go();
 }
 
 //Quay dau
@@ -130,41 +161,50 @@ void turnAround() {
 
   delay(1000);
   stop();
+  delay(500);
 }
 
-void loop() {
-  int truoc = ahead();
-  int trai = left();
-  int phai = right();
+void update_st(){
+  int a0=left();
+  int a1=ahead();
+  int a2=right();
 
-  //In khoang cach de kiem tra
   Serial.print("Phia truoc cach: ");
-  Serial.print(truoc);
+  Serial.print(a1);
   Serial.print(" cm\t\t\t"); 
 
   Serial.print("Phia ben trai cach: ");
-  Serial.print(trai);
-  Serial.print(" cm\t\t\t");
+  Serial.print(a0);
+  Serial.println(" cm\t\t\t");
 
-  Serial.print("Phia ben phai cach: ");
-  Serial.print(phai);
-  Serial.println(" cm");
+  if(a0<23) a[0]=0;
+  else a[0]=1;
+  if(a1<10) a[1]=0;
+  else a[1]=1;
+  if(a2<23) a[2]=0;
+  else a[2]=1;
+}
 
-  if (trai > 5) {
+void solve_labyrinth() {
+  update_st();
+  if (a[0] == 1) {
     turnLeft();
   }
-  else if (truoc > 5) {
-    goAhead();
-  }
-  else if (phai > 5) {
-    turnRight();
-  }
   else {
-    turnAround();
+    if (a[1] == 1) {
+      goAhead();
+    }
+    else {
+      if (a[2] == 1) {
+        turnRight();
+      }
+      else {
+        turnAround();
+      }
+    }
   }
-  //Chu y nay, ma chac anh Viet cung co noi thoi, sau moi lan re se co delay de cho dung quay bao nhieu do a, nen nho test roi chon delay cho phu hop
-  //Con vi sao lai khong phai cu di thang, gap ngo cut moi re
-  //Tai vi lam the se xay ra truong hop xe co the di toi di lui mot duong thang neu khong luu lai duong minh da di
-  //Vi the cu uu tien re trai neu ben trai dang trong truoc (theo Left Hand-rule)
-  //Nho bay lai t cai code sau khi chinh nghe =)))))
+}
+
+void loop() {
+  solve_labyrinth();
 }
